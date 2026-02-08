@@ -3,9 +3,17 @@ package berror
 import (
 	"errors"
 	"fmt"
-
-	"github.com/bearaujus/berror/pkg"
 )
+
+// NewWithStackTrace creates a WrappedErr using format and args, capturing the caller stack trace.
+func NewWithStackTrace(format string, args ...any) WrappedErr {
+	return NewErrDefinition(format, OptionErrDefinitionWithCustomStackTraceCapturer(func() string { return captureStackTrace(5) })).New(args...)
+}
+
+// New creates a WrappedErr using format and args.
+func New(format string, args ...any) WrappedErr {
+	return NewErrDefinition(format, OptionErrDefinitionWithDisabledStackTrace()).New(args...)
+}
 
 type (
 	// ErrDefinition represents an interface for creating new error instances
@@ -35,7 +43,7 @@ func NewErrDefinition(format string, opts ...ErrDefinitionOption) ErrDefinition 
 	ed := errDefinition{
 		format:             format,
 		formatter:          ErrWrapperFormatterDefault,
-		stackTraceCapturer: pkg.CaptureStackTrace,
+		stackTraceCapturer: func() string { return captureStackTrace(4) },
 	}
 	for _, opt := range opts {
 		opt(&ed)
